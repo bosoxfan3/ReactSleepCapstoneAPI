@@ -1,0 +1,11 @@
+language: node_js
+node_js: node
+services:
+- mongodb
+deploy:
+  provider: heroku
+  api_key:
+    secure: VmpF+vrDH9SsEaQvpt6LUtKDOKvJoBgacE8A+NVqUha/VYuq1OBpDTrgQ/tAQjbAFKRMdZlmCAKnpdI4bksfMlgvXHTG/oS7ZBp7/jclaLX5nC2NI2p5viry+6mbfCpHcJgVcdWOpUXjw0+dGeJy+nlQalxZt1195Y5EQuwO5YvgF25oACSN4WOG+uJT5ZB05eIk16tZMxuuu80AdNqo+f2J8SuyRd9w7anq5w/AnYffgNULRe1caKDDBvu32tANi2ytLuxEYK1h0cMQefEPIsNBRakisIAOKiT8z60Wzf2uKIm/MwErn8gA67UFAzrrUVVKtWGqQYPJIko73oN8wIGzyX+9XXSkQn2x+JY0ZPWR0FdtGrl+rjmeuvfMALisllvCP24kmW/lMH14B2dienhg6sruVYgagna7E5gLmkU/XZuLZ6DWnDfO9zAIePX33h7Sq1rWvaiK04oA1fQorXC6JpOLc0BDX6+crE0MW9MGnkCRDF2nqmnNvndVkXTrzuDmQROuCQKpA4r72neijr1SHZmryBRih7lvDKpSsQ7yj6xbCPbsfoUDpfWurHAQ973GQlBi38MGck0IwTdg56QEmG3+O7CoPiptpprdhx7T4iIoBc87LlwkSsNVum7bjMnwEBo2/dt827nWbtCuiFZUuP/HyIc3mPD/zkNMDrM=
+  app: sleep-capstone-api
+  on:
+    repo: bosoxfan3/ReactSleepCapstoneAPI
