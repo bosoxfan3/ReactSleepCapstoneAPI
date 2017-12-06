@@ -5,8 +5,9 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const passport = require('passport');
 
-const usersRouter = require('./users/router');
-const authRouter = require('./auth/router');
+const usersRouter = require('./users/users.router');
+const authRouter = require('./auth/auth.router');
+const sleepRouter = require('./sleeps/sleeps.router');
 const {basicStrategy, jwtStrategy} = require('./auth/strategies');
 
 mongoose.Promise = global.Promise;
@@ -34,6 +35,7 @@ passport.use(jwtStrategy);
 
 app.use('/api/users/', usersRouter);
 app.use('/api/auth/', authRouter);
+app.use('/api/sleeps/', sleepRouter);
 
 //a protected endpoint that needs a jwt. seems to be the only one right now
 app.get(
