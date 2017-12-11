@@ -32,7 +32,30 @@ router.delete('/:date', (req, res) => {
     .catch(err => res.status(500).json({message: 'Internal server error'}));
 });
 
-router.post('/new', jsonParser, (req, res) => {
+router.put('/:date', jsonParser, (req, res) => {
+  console.log(req.params.date);
+  if (!(req.params.date && req.body.date && req.params.date === req.body.date)) {
+    const message = (
+      `Request path date (${req.params.date}) and request body date` +
+      `(${req.body.date}) must match`);
+    console.error(message);
+    return res.status(400).json({message: message});
+  }
+  const toUpdate = {};
+  const updateableFields = ['date', 'bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      toUpdate[field] = req.body[field];
+    }
+  });
+  Sleep
+    .findOneAndUpdate({date: req.params.date}, {$set: toUpdate})
+    .then(sleep => res.status(204).end())
+    .catch(err => res.status(500).json({message: 'Internal server error'}));
+});
+
+router.post('/add/new', jsonParser, (req, res) => {
+  res.send(req.body);
   const requiredFields = ['date', 'bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
   for (let i=0; i<requiredFields.length; i++) {
     const field = requiredFields[i];
