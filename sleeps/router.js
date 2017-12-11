@@ -6,7 +6,7 @@ const {Sleep} = require('./models');
 
 const router = express.Router();
 
-const jsonParser = bodyParser.json();
+// const jsonParser = bodyParser.json();
 const authenticate = passport.authenticate('jwt', {session: false});
 //Remove when testing in postman and then add again
 
@@ -24,39 +24,39 @@ router.get('/', (req, res) => {
     });
 });
 
-router.delete('/:date', (req, res) => {
-  console.log(req.params.date);
+router.delete('/:id', (req, res) => {
+  console.log(req.params.id);
   Sleep
-    .findOneAndRemove({date: req.params.date})
+    .findOneAndRemove({_id: req.params.id})
     .then(() => res.status(204).end())
     .catch(err => res.status(500).json({message: 'Internal server error'}));
 });
 
-router.put('/:date', jsonParser, (req, res) => {
-  console.log(req.params.date);
-  if (!(req.params.date && req.body.date && req.params.date === req.body.date)) {
+router.put('/:id', (req, res) => {
+  console.log(req.params.id);
+  if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
     const message = (
-      `Request path date (${req.params.date}) and request body date` +
-      `(${req.body.date}) must match`);
+      `Request path id (${req.params.id}) and request body id` +
+      `(${req.body.id}) must match`);
     console.error(message);
     return res.status(400).json({message: message});
   }
   const toUpdate = {};
-  const updateableFields = ['date', 'bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
+  const updateableFields = ['bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
   updateableFields.forEach(field => {
     if (field in req.body) {
       toUpdate[field] = req.body[field];
     }
   });
   Sleep
-    .findOneAndUpdate({date: req.params.date}, {$set: toUpdate})
+    .findOneAndUpdate({_id: req.params.id}, {$set: toUpdate})
     .then(sleep => res.status(204).end())
     .catch(err => res.status(500).json({message: 'Internal server error'}));
 });
 
-router.post('/add/new', jsonParser, (req, res) => {
-  res.send(req.body);
-  const requiredFields = ['date', 'bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
+router.post('/', (req, res) => {
+  console.log('POST', req.body);
+  const requiredFields = ['bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
   for (let i=0; i<requiredFields.length; i++) {
     const field = requiredFields[i];
     if (!(field in req.body)) {
@@ -67,7 +67,6 @@ router.post('/add/new', jsonParser, (req, res) => {
   }
   Sleep
     .create({
-      date: req.body.date,
       bedTime: req.body.bedTime,
       awakeTime: req.body.awakeTime,
       alarm: req.body.alarm,
@@ -83,7 +82,5 @@ router.post('/add/new', jsonParser, (req, res) => {
       res.status(500).json({message: 'Internal server error'});
     });
 });
-
-//Will need post and delete and such
 
 module.exports = router;

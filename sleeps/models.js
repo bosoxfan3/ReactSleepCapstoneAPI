@@ -5,7 +5,7 @@ mongoose.Promise = global.Promise;
 
 const SleepSchema = mongoose.Schema({
   //hours: ,
-  date: {type: String, required: true},
+  // date: {type: String, required: true},
   bedTime: {type: Date, required: true},
   awakeTime: {type: Date, default: Date.now, required: true},
   alarm: {type: Boolean, required: true},
@@ -36,8 +36,9 @@ SleepSchema.virtual('awakeTimeMilitary').get(function() {
 
 SleepSchema.methods.apiRepr = function() {
   return {
+    id: this._id,
     hours: this.hours,
-    date: this.date,
+    // date: this.date,
     bedTime: this.bedTimeMilitary,
     awakeTime: this.awakeTimeMilitary,
     alarm: this.alarm,
