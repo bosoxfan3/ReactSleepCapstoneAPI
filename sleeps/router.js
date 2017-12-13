@@ -7,10 +7,11 @@ const {Sleep} = require('./models');
 const router = express.Router();
 
 // const jsonParser = bodyParser.json();
-const authenticate = passport.authenticate('jwt', {session: false});
+// const authenticate = passport.authenticate('jwt', {session: false});
 //Remove when testing in postman and then add again
 
 router.get('/', (req, res) => {
+  console.log(req.user);
   return Sleep.find()
     .then(sleeps => {
       res.json(

@@ -37,7 +37,7 @@ passport.use(jwtStrategy);
 
 app.use('/api/users/', usersRouter);
 app.use('/api/auth/', authRouter);
-app.use('/api/sleeps/', sleepRouter);
+app.use('/api/sleeps/', passport.authenticate('jwt', {session: false}), sleepRouter);
 
 //a protected endpoint that needs a jwt. seems to be the only one right now
 app.get(
