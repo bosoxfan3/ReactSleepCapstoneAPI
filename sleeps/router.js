@@ -13,6 +13,7 @@ const router = express.Router();
 router.get('/', (req, res) => {
   return Sleep
     .find({user: req.user.id})
+    .sort({'date':1})
     .then(sleeps => {
       res.json(
         sleeps.map(
