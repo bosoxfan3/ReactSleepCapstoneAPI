@@ -1,4 +1,4 @@
 const {Sleep} = require('./models');
-const {router} = require('./sleeps.router');
+const {router} = require('./router');
 
 module.exports = {Sleep, router};
