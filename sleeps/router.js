@@ -13,11 +13,16 @@ const router = express.Router();
 router.get('/', (req, res) => {
   return Sleep
     .find({user: req.user.id})
-    .sort({'bedTime':1})
+    .sort({awakeTime: 1})
     .then(sleeps => {
+
       res.json(
         sleeps.map(
-          (sleep) => sleep.apiRepr())
+          (sleep) => {
+            console.log(sleep.date);
+            return sleep.apiRepr()
+          }
+        )
       );
     })
     .catch(err => {
