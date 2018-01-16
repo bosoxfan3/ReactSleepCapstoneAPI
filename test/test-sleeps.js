@@ -18,18 +18,36 @@ const password = 'examplePass';
 const firstName = 'Example';
 const lastName = 'User';
 let id;
-let seedData;
-
-function tearDownDb() {
-  return new Promise((resolve, reject) => {
-    console.warn('Deleting database');
-    mongoose.connection.dropDatabase()
-      .then(result => resolve(result))
-      .catch(err => reject(err));
-  });
-}
 
 describe('Sleep endpoints', function() {
+  function seedSleepData() {
+    console.info('seeding sleep data');
+    let seedData = [];
+    for (let i = 1; i <= 10; i++) {
+      seedData.push({
+        bedTime: faker.date.between('2017-01-01', '2017-01-31'),
+        awakeTime: faker.date.between('2017-02-01', '2017-02-28'),
+        alarm: faker.random.boolean(),
+        exercise: faker.random.boolean(),
+        blueLight: faker.random.boolean(),
+        caffeine: Math.floor(Math.random() * 5) + 1,
+        moodAtWake: Math.floor(Math.random() * 10) + 1,
+        moodAtSleep: Math.floor(Math.random() * 10) + 1,
+        user: id
+      });
+    }
+    return Sleep.insertMany(seedData);
+  }
+
+  function tearDownDb() {
+    return new Promise((resolve, reject) => {
+      console.warn('Deleting database');
+      mongoose.connection.dropDatabase()
+        .then(result => resolve(result))
+        .catch(err => reject(err));
+    });
+  }
+  
   before(function() {
     return runServer(TEST_DATABASE_URL);
   });
@@ -48,26 +66,6 @@ describe('Sleep endpoints', function() {
       .catch(err => console.log(err))
       .then(() => done());
   });
-
-  function seedSleepData() {
-    console.info('seeding sleep data');
-    seedData = [];
-    for (let i = 1; i <= 10; i++) {
-      seedData.push({
-        bedTime: faker.date.between('2017-01-01', '2017-01-31'),
-        awakeTime: faker.date.between('2017-02-01', '2017-02-28'),
-        alarm: faker.random.boolean(),
-        exercise: faker.random.boolean(),
-        blueLight: faker.random.boolean(),
-        caffeine: Math.floor(Math.random() * 5) + 1,
-        moodAtWake: Math.floor(Math.random() * 10) + 1,
-        moodAtSleep: Math.floor(Math.random() * 10) + 1,
-        user: id
-      });
-    }
-    // console.log(seedData);
-    return Sleep.insertMany(seedData);
-  }
 
   afterEach(function() {
     return tearDownDb();
@@ -117,7 +115,6 @@ describe('Sleep endpoints', function() {
           if (err instanceof chai.AssertionError) {
             throw err;
           }
-
           const res = err.response;
           expect(res).to.have.status(401);
         });
@@ -153,223 +150,231 @@ describe('Sleep endpoints', function() {
           expect(res).to.have.status(401);
         });
     });
-    it('Should send sleep data for that user on GET request', function() {
-      const token = jwt.sign(
-        {
-          user: {
-            username,
-            firstName,
-            lastName,
-            id
+    describe('GET endpoints', function() {
+      it('Should send sleep data for that user on GET request', function() {
+        const token = jwt.sign(
+          {
+            user: {
+              username,
+              firstName,
+              lastName,
+              id
+            }
+          },
+          JWT_SECRET,
+          {
+            algorithm: 'HS256',
+            subject: username,
+            expiresIn: '7d'
           }
-        },
-        JWT_SECRET,
-        {
-          algorithm: 'HS256',
-          subject: username,
-          expiresIn: '7d'
-        }
-      );
-      return chai
-        .request(app)
-        .get('/api/sleeps')
-        .set('authorization', `Bearer ${token}`)
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res.body).to.be.an('array');
-          expect(res.body.length).to.equal(10);
-        });
-    });
-    it('Should return sleeps with all the right fields on GET request', function() {
-      const token = jwt.sign(
-        {
-          user: {
-            username,
-            firstName,
-            lastName,
-            id
-          }
-        },
-        JWT_SECRET,
-        {
-          algorithm: 'HS256',
-          subject: username,
-          expiresIn: '7d'
-        }
-      );
-      return chai
-        .request(app)
-        .get('/api/sleeps')
-        .set('authorization', `Bearer ${token}`)
-        .then(res => {
-          res.body.forEach(function(sleep) {
-            expect(sleep).to.be.an('object');
-            expect(sleep).to.have.all.keys('bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 
-              'caffeine', 'moodAtWake', 'moodAtSleep', 'date', 'hours', 'id');
+        );
+        return chai
+          .request(app)
+          .get('/api/sleeps')
+          .set('authorization', `Bearer ${token}`)
+          .then(res => {
+            expect(res).to.have.status(200);
+            expect(res.body).to.be.an('array');
+            expect(res.body.length).to.equal(10);
           });
-        });
-    });
-    it('Should send sleep data with specific id on GET/:id request', function() {
-      let searchId;
-      const token = jwt.sign(
-        {
-          user: {
-            username,
-            firstName,
-            lastName,
-            id
+      });
+      it('Should return sleeps with all the right fields on GET request', function() {
+        const token = jwt.sign(
+          {
+            user: {
+              username,
+              firstName,
+              lastName,
+              id
+            }
+          },
+          JWT_SECRET,
+          {
+            algorithm: 'HS256',
+            subject: username,
+            expiresIn: '7d'
           }
-        },
-        JWT_SECRET,
-        {
-          algorithm: 'HS256',
-          subject: username,
-          expiresIn: '7d'
-        }
-      );
-      return Sleep
-        .findOne()
-        .then(sleep => {
-          searchId = sleep.id;
-          return chai
-            .request(app)
-            .get(`/api/sleeps/${searchId}`)
-            .set('authorization', `Bearer ${token}`);
-        })
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res.body).to.be.an('object');
-        });
-    });
-    it('should add a new sleep on POST request', function() {
-      const newSleep = {
-        bedTime: faker.date.between('2017-01-01', '2017-01-31'),
-        awakeTime: faker.date.between('2017-02-01', '2017-02-28'),
-        alarm: faker.random.boolean(),
-        exercise: faker.random.boolean(),
-        blueLight: faker.random.boolean(),
-        caffeine: Math.floor(Math.random() * 5) + 1,
-        moodAtWake: Math.floor(Math.random() * 10) + 1,
-        moodAtSleep: Math.floor(Math.random() * 10) + 1,
-        user: id
-      };
-      const token = jwt.sign(
-        {
-          user: {
-            username,
-            firstName,
-            lastName,
-            id
+        );
+        return chai
+          .request(app)
+          .get('/api/sleeps')
+          .set('authorization', `Bearer ${token}`)
+          .then(res => {
+            res.body.forEach(function(sleep) {
+              expect(sleep).to.be.an('object');
+              expect(sleep).to.have.all.keys('bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 
+                'caffeine', 'moodAtWake', 'moodAtSleep', 'date', 'hours', 'id');
+            });
+          });
+      });
+      it('Should send sleep data with specific id on GET/:id request', function() {
+        let searchId;
+        const token = jwt.sign(
+          {
+            user: {
+              username,
+              firstName,
+              lastName,
+              id
+            }
+          },
+          JWT_SECRET,
+          {
+            algorithm: 'HS256',
+            subject: username,
+            expiresIn: '7d'
           }
-        },
-        JWT_SECRET,
-        {
-          algorithm: 'HS256',
-          subject: username,
-          expiresIn: '7d'
-        }
-      );
-      return chai
-        .request(app)
-        .post('/api/sleeps/')
-        .set('authorization', `Bearer ${token}`)
-        .send(newSleep)
-        .then(res => {
-          expect(res).to.have.status(201);
-          expect(res).to.be.json;
-          expect(res.body).to.be.an('object');
-          expect(res.body).to.have.all.keys('bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep', 'date', 'hours', 'id');  
-          expect(res.body.alarm).to.equal(newSleep.alarm);
-          expect(res.body.exercise).to.equal(newSleep.exercise);
-          expect(res.body.blueLight).to.equal(newSleep.blueLight);
-          expect(res.body.caffeine).to.equal(newSleep.caffeine);
-          expect(res.body.moodAtWake).to.equal(newSleep.moodAtWake);
-          expect(res.body.moodAtSleep).to.equal(newSleep.moodAtSleep);
-          expect(res.body.id).to.not.equal(null);          
-        });
+        );
+        return Sleep
+          .findOne()
+          .then(sleep => {
+            searchId = sleep.id;
+            return chai
+              .request(app)
+              .get(`/api/sleeps/${searchId}`)
+              .set('authorization', `Bearer ${token}`);
+          })
+          .then(res => {
+            expect(res).to.have.status(200);
+            expect(res.body).to.be.an('object');
+          });
+      });
     });
-    it('should update submitted fields on PUT request', function() {
-      const token = jwt.sign(
-        {
-          user: {
-            username,
-            firstName,
-            lastName,
-            id
+    describe('POST endpoint', function() {
+      it('should add a new sleep on POST request', function() {
+        const newSleep = {
+          bedTime: faker.date.between('2017-01-01', '2017-01-31'),
+          awakeTime: faker.date.between('2017-02-01', '2017-02-28'),
+          alarm: faker.random.boolean(),
+          exercise: faker.random.boolean(),
+          blueLight: faker.random.boolean(),
+          caffeine: Math.floor(Math.random() * 5) + 1,
+          moodAtWake: Math.floor(Math.random() * 10) + 1,
+          moodAtSleep: Math.floor(Math.random() * 10) + 1,
+          user: id
+        };
+        const token = jwt.sign(
+          {
+            user: {
+              username,
+              firstName,
+              lastName,
+              id
+            }
+          },
+          JWT_SECRET,
+          {
+            algorithm: 'HS256',
+            subject: username,
+            expiresIn: '7d'
           }
-        },
-        JWT_SECRET,
-        {
-          algorithm: 'HS256',
-          subject: username,
-          expiresIn: '7d'
-        }
-      );
-      const updateData = {
-        alarm: true,
-        exercise: true,
-        blueLight: true,
-        caffeine: 1,
-        moodAtWake: 1,
-        moodAtSleep: 1,
-      };
-      return Sleep
-        .findOne()
-        .then(sleep => {
-          updateData.id = sleep.id;
-          return chai
-            .request(app)
-            .put(`/api/sleeps/${sleep.id}`)
-            .set('authorization', `Bearer ${token}`)
-            .send(updateData);
-        })
-        .then(res => {
-          expect(res).to.have.status(204);
-          return Sleep.findById(updateData.id);
-        })
-        .then(sleep => {
-          expect(sleep.alarm).to.equal(updateData.alarm);
-          expect(sleep.exercise).to.equal(updateData.exercise);
-          expect(sleep.blueLight).to.equal(updateData.blueLight);
-          expect(sleep.caffeine).to.equal(updateData.caffeine);
-          expect(sleep.moodAtWake).to.equal(updateData.moodAtWake);
-          expect(sleep.moodAtSleep).to.equal(updateData.moodAtSleep);
-        });
+        );
+        return chai
+          .request(app)
+          .post('/api/sleeps/')
+          .set('authorization', `Bearer ${token}`)
+          .send(newSleep)
+          .then(res => {
+            expect(res).to.have.status(201);
+            expect(res).to.be.json;
+            expect(res.body).to.be.an('object');
+            expect(res.body).to.have.all.keys('bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep', 'date', 'hours', 'id');  
+            expect(res.body.alarm).to.equal(newSleep.alarm);
+            expect(res.body.exercise).to.equal(newSleep.exercise);
+            expect(res.body.blueLight).to.equal(newSleep.blueLight);
+            expect(res.body.caffeine).to.equal(newSleep.caffeine);
+            expect(res.body.moodAtWake).to.equal(newSleep.moodAtWake);
+            expect(res.body.moodAtSleep).to.equal(newSleep.moodAtSleep);
+            expect(res.body.id).to.not.equal(null);          
+          });
+      });
     });
-    it('should delete a post by id', function() {
-      let sleep;
-      const token = jwt.sign(
-        {
-          user: {
-            username,
-            firstName,
-            lastName,
-            id
+    describe('PUT endpoint', function() {
+      it('should update submitted fields on PUT request', function() {
+        const token = jwt.sign(
+          {
+            user: {
+              username,
+              firstName,
+              lastName,
+              id
+            }
+          },
+          JWT_SECRET,
+          {
+            algorithm: 'HS256',
+            subject: username,
+            expiresIn: '7d'
           }
-        },
-        JWT_SECRET,
-        {
-          algorithm: 'HS256',
-          subject: username,
-          expiresIn: '7d'
-        }
-      );
-      return Sleep
-        .findOne()
-        .then(_sleep => {
-          sleep = _sleep;
-          return chai
-            .request(app)
-            .delete(`/api/sleeps/${sleep.id}`)
-            .set('authorization', `Bearer ${token}`);
-        })
-        .then(res => {
-          expect(res).to.have.status(204);
-          return Sleep.findById(sleep.id);
-        })
-        .then(_sleep => {
-          expect(_sleep).to.not.exist;
-        });
+        );
+        const updateData = {
+          alarm: true,
+          exercise: true,
+          blueLight: true,
+          caffeine: 1,
+          moodAtWake: 1,
+          moodAtSleep: 1,
+        };
+        return Sleep
+          .findOne()
+          .then(sleep => {
+            updateData.id = sleep.id;
+            return chai
+              .request(app)
+              .put(`/api/sleeps/${sleep.id}`)
+              .set('authorization', `Bearer ${token}`)
+              .send(updateData);
+          })
+          .then(res => {
+            expect(res).to.have.status(204);
+            return Sleep.findById(updateData.id);
+          })
+          .then(sleep => {
+            expect(sleep.alarm).to.equal(updateData.alarm);
+            expect(sleep.exercise).to.equal(updateData.exercise);
+            expect(sleep.blueLight).to.equal(updateData.blueLight);
+            expect(sleep.caffeine).to.equal(updateData.caffeine);
+            expect(sleep.moodAtWake).to.equal(updateData.moodAtWake);
+            expect(sleep.moodAtSleep).to.equal(updateData.moodAtSleep);
+          });
+      });
+    });
+    describe('DELETE endpoint', function() {
+      it('should delete a post by id on DELETE request', function() {
+        let sleep;
+        const token = jwt.sign(
+          {
+            user: {
+              username,
+              firstName,
+              lastName,
+              id
+            }
+          },
+          JWT_SECRET,
+          {
+            algorithm: 'HS256',
+            subject: username,
+            expiresIn: '7d'
+          }
+        );
+        return Sleep
+          .findOne()
+          .then(_sleep => {
+            sleep = _sleep;
+            return chai
+              .request(app)
+              .delete(`/api/sleeps/${sleep.id}`)
+              .set('authorization', `Bearer ${token}`);
+          })
+          .then(res => {
+            expect(res).to.have.status(204);
+            return Sleep.findById(sleep.id);
+          })
+          .then(_sleep => {
+            expect(_sleep).to.not.exist;
+          });
+      });
     });
   });
 });
