@@ -13,13 +13,13 @@ const expect = chai.expect;
 
 chai.use(chaiHttp);
 
-const username = 'exampleUser';
-const password = 'examplePass';
-const firstName = 'Example';
-const lastName = 'User';
-let id;
-
 describe('Sleep endpoints', function() {
+  const username = 'exampleUser';
+  const password = 'examplePass';
+  const firstName = 'Example';
+  const lastName = 'User';
+  let id;
+  
   function seedSleepData() {
     console.info('seeding sleep data');
     let seedData = [];

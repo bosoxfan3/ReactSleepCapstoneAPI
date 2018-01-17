@@ -1,17 +1,13 @@
-global.DATABASE_URL = 'mongodb://localhost/jwt-auth-demo-test';
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const jwt = require('jsonwebtoken');
 
 const {app, runServer, closeServer} = require('../server');
 const {User} = require('../users');
-const {JWT_SECRET} = require('../config');
+const {JWT_SECRET, TEST_DATABASE_URL} = require('../config');
 
 const expect = chai.expect;
 
-// This let's us make HTTP requests
-// in our tests.
-// see: https://github.com/chaijs/chai-http
 chai.use(chaiHttp);
 
 describe('/api/user', function() {
@@ -25,7 +21,7 @@ describe('/api/user', function() {
   const lastNameB = 'UserB';
 
   before(function() {
-    return runServer();
+    return runServer(TEST_DATABASE_URL);
   });
 
   after(function() {
@@ -332,7 +328,6 @@ describe('/api/user', function() {
           });
       });
       it('Should reject users with duplicate username', function() {
-        // Create an initial user
         return User.create({
           username,
           password,
@@ -340,7 +335,6 @@ describe('/api/user', function() {
           lastName
         })
           .then(() =>
-            // Try to create a second user with the same username
             chai.request(app).post('/api/users').send({
               username,
               password,
