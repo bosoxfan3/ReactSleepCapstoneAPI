@@ -20,10 +20,6 @@ describe('Auth endpoints', function() {
     return runServer(TEST_DATABASE_URL);
   });
 
-  after(function() {
-    return closeServer();
-  });
-
   beforeEach(function() {
     return User.hashPassword(password).then(password =>
       User.create({
@@ -37,6 +33,10 @@ describe('Auth endpoints', function() {
 
   afterEach(function() {
     return User.remove({});
+  });
+
+  after(function() {
+    return closeServer();
   });
 
   describe('/api/auth/login', function() {
@@ -134,7 +134,6 @@ describe('Auth endpoints', function() {
           expiresIn: '7d'
         }
       );
-
       return chai
         .request(app)
         .post('/api/auth/refresh')
@@ -146,7 +145,6 @@ describe('Auth endpoints', function() {
           if (err instanceof chai.AssertionError) {
             throw err;
           }
-
           const res = err.response;
           expect(res).to.have.status(401);
         });
@@ -167,7 +165,6 @@ describe('Auth endpoints', function() {
           subject: username
         }
       );
-
       return chai
         .request(app)
         .post('/api/auth/refresh')
@@ -179,7 +176,6 @@ describe('Auth endpoints', function() {
           if (err instanceof chai.AssertionError) {
             throw err;
           }
-
           const res = err.response;
           expect(res).to.have.status(401);
         });
@@ -201,7 +197,6 @@ describe('Auth endpoints', function() {
         }
       );
       const decoded = jwt.decode(token);
-
       return chai
         .request(app)
         .post('/api/auth/refresh')

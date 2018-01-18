@@ -1,14 +1,8 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const passport = require('passport');
 
 const {Sleep} = require('./models');
 
 const router = express.Router();
-
-// const jsonParser = bodyParser.json();
-// const authenticate = passport.authenticate('jwt', {session: false});
-//Remove when testing in postman and then add again
 
 router.get('/', (req, res) => {
   return Sleep
@@ -20,7 +14,7 @@ router.get('/', (req, res) => {
         sleeps.map(
           (sleep) => {
             console.log(sleep.date);
-            return sleep.apiRepr()
+            return sleep.apiRepr();
           }
         )
       );
@@ -43,9 +37,7 @@ router.get('/:id', (req, res) => {
     });
 });
 
-
 router.delete('/:id', (req, res) => {
-  console.log(req.params.id);
   Sleep
     .findOneAndRemove({_id: req.params.id})
     .then(() => res.status(204).end())
@@ -53,7 +45,6 @@ router.delete('/:id', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  console.log(req.params.id);
   if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
     const message = (
       `Request path id (${req.params.id}) and request body id` +
