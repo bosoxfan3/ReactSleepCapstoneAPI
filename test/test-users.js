@@ -1,10 +1,9 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const jwt = require('jsonwebtoken');
 
 const {app, runServer, closeServer} = require('../server');
 const {User} = require('../users');
-const {JWT_SECRET, TEST_DATABASE_URL} = require('../config');
+const {TEST_DATABASE_URL} = require('../config');
 
 const expect = chai.expect;
 
@@ -15,10 +14,6 @@ describe('/api/user', function() {
   const password = 'examplePass';
   const firstName = 'Example';
   const lastName = 'User';
-  const usernameB = 'exampleUserB';
-  const passwordB = 'examplePassB';
-  const firstNameB = 'ExampleB';
-  const lastNameB = 'UserB';
 
   before(function() {
     return runServer(TEST_DATABASE_URL);
