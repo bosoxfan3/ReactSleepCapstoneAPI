@@ -1,8 +1,6 @@
 const passport = require('passport');
 const {BasicStrategy} = require('passport-http');
 const {
-  // Assigns the Strategy export to the name JwtStrategy using object
-  // destructuring
   Strategy: JwtStrategy,
   ExtractJwt
 } = require('passport-jwt');
@@ -43,9 +41,7 @@ const basicStrategy = new BasicStrategy((username, password, callback) => {
 const jwtStrategy = new JwtStrategy(
   {
     secretOrKey: JWT_SECRET,
-    // Look for the JWT as a Bearer auth header
     jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('Bearer'),
-    // Only allow HS256 tokens
     algorithms: ['HS256']
   },
   (payload, done) => {

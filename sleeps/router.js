@@ -9,14 +9,10 @@ router.get('/', (req, res) => {
     .find({user: req.user.id})
     .sort({awakeTime: 1})
     .then(sleeps => {
-
       res.json(
-        sleeps.map(
-          (sleep) => {
-            console.log(sleep.date);
-            return sleep.apiRepr();
-          }
-        )
+        sleeps.map((sleep) => {
+          return sleep.apiRepr();
+        })
       );
     })
     .catch(err => {
@@ -66,7 +62,6 @@ router.put('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  console.log('POST', req.body);
   const requiredFields = ['bedTime', 'awakeTime', 'alarm', 'exercise', 'blueLight', 'caffeine', 'moodAtWake', 'moodAtSleep'];
   for (let i=0; i<requiredFields.length; i++) {
     const field = requiredFields[i];
